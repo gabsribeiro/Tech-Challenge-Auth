@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Tech-Challenge-Auth
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+
+Resources:
+  TechChallenge03UserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties: 
+      UserPoolName: TechChallenge03UserPool
+      Schema: 
+        - Name: "username"
+          AttributeDataType: "String"
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          StringAttributeConstraints: 
+            MinLength: "11"
+            MaxLength: "11"
+
+  CognitoUserPoolClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties: 
+      ClientName: TechChallenge03UserPoolClient
+      UserPoolId: 
+        Ref: TechChallenge03UserPool
+      ExplicitAuthFlows: 
+        - "ALLOW_USER_SRP_AUTH"
+        - "ALLOW_REFRESH_TOKEN_AUTH"
+        - "ALLOW_USER_PASSWORD_AUTH"
+
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: auth/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Events:
+        Auth:
+          Type: Api
+          Properties:
+            Path: /auth
+            Method: post
+
+Outputs:
+  AuthApi:
+    Description: "API Gateway endpoint URL for Prod stage for Auth function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/auth/"
+  AuthFunction:
+    Description: "Auth Lambda Function ARN"
+    Value: !GetAtt AuthFunction.Arn
+  AuthFunctionIamRole:
+    Description: "Implicit IAM Role created for Auth function"
+    Value: !GetAtt AuthFunctionRole.Arn
+  UserPoolId:
+    Description: "The ID of the TechChallenge03 Cognito User Pool"
+    Value: !Ref TechChallenge03UserPool
+  UserPoolClientId:
+    Description: "The ID of the Cognito User Pool Client for TechChallenge03"
+    Value: !Ref CognitoUserPoolClient

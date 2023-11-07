@@ -1,0 +1,3 @@
+pytest
+boto3==1.20.28  # ou uma versão mais recente
+requests
